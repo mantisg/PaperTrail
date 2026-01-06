@@ -14,7 +14,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 pygame.display.set_caption("PaperTrail: Escape from this Dimension")
 running = True
-dt = 0.1
+dt = 0.02
 
 player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 
@@ -23,7 +23,6 @@ while running:
         if event.type == pygame.QUIT:
             running = False
     screen.fill((150, 150, 150))
-    pygame.draw.lines(screen, "blue", False, [(0, 0), (WIDTH, 0), (WIDTH, HEIGHT), (0, HEIGHT)], 5)
 
     pygame.draw.circle(screen, "red", player_pos, 40)
 
