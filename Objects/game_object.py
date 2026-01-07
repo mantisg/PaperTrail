@@ -100,27 +100,9 @@ class GameObject:
         Returns:
             True if masks overlap, False otherwise
         """
-        img = self.get_image()
-        # Get the rect for this object centered on its position
-        self_rect = img.get_rect(center=(int(self.pos.x), int(self.pos.y)))
-        
-        # Get the rect for the other object
-        other_rect = other_mask.get_size()
-        other_rect = pygame.Rect(int(other_pos.x - other_rect[0] / 2), 
-                                  int(other_pos.y - other_rect[1] / 2), 
-                                  other_rect[0], other_rect[1])
-        
-        # Check if rects overlap first (fast check)
-        if not self_rect.colliderect(other_rect):
-            return False
-        
-        # If rects overlap, check mask overlap
-        offset = (other_rect.x - self_rect.x, other_rect.y - self_rect.y)
-        try:
-            return self._mask.overlap(other_mask, offset)
-        except Exception:
-            # Fallback to rect collision if mask collision fails
-            return True
+        # Delegate to centralized collision utilities
+        from collision import mask_vs_object
+        return mask_vs_object(other_mask, other_pos, self)
 
     def overlaps_partial(self, other_pos, other_mask, use_self_partial=False, use_other_partial=False):
         """Check overlap using partial masks (bottom 1/3rd).
@@ -134,37 +116,10 @@ class GameObject:
         Returns:
             True if masks overlap, False otherwise
         """
-        img = self.get_image()
-        self_h = img.get_height()
-        
-        # Get masks (partial or full)
-        self_mask = self.get_partial_mask_bottom_third() if use_self_partial else self._mask
-        other_mask_to_use = other_mask  # We receive already-processed mask from caller
-        
-        # Adjust rect positions if using partial mask
-        self_rect = img.get_rect(center=(int(self.pos.x), int(self.pos.y)))
-        if use_self_partial:
-            self_rect.y = int(self.pos.y + self_h / 3)  # Shift to bottom third
-        
-        # Get the rect for the other object
-        other_size = other_mask_to_use.get_size()
-        other_rect = pygame.Rect(int(other_pos.x - other_size[0] / 2), 
-                                  int(other_pos.y - other_size[1] / 2), 
-                                  other_size[0], other_size[1])
-        if use_other_partial:
-            other_rect.y = int(other_pos.y + other_size[1] / 3)  # Shift to bottom third
-        
-        # Check if rects overlap first (fast check)
-        if not self_rect.colliderect(other_rect):
-            return False
-        
-        # If rects overlap, check mask overlap
-        offset = (other_rect.x - self_rect.x, other_rect.y - self_rect.y)
-        try:
-            return self_mask.overlap(other_mask_to_use, offset)
-        except Exception:
-            # Fallback to rect collision if mask collision fails
-            return True
+        # Delegate to centralized collision utilities
+        from collision import mask_vs_object
+        # When use_self_partial is True, we want to use the bottom-third mask for self
+        return mask_vs_object(other_mask, other_pos, self, use_obj_partial=use_self_partial)
 
     def get_bottom_y(self):
         """Get the y-coordinate of the bottom of this object (for depth sorting)."""

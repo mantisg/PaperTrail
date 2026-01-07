@@ -217,7 +217,7 @@ def main():
                 # Check collision with enemies
                 for e in enemies[:]:
                     if p.check_collision_with_enemy(e):
-                        e.on_hit_player(player)  # Damage taken by enemy
+                        e.take_damage(p.damage)
                         p.dead = True
                         break
                 
@@ -225,13 +225,20 @@ def main():
                 if p.dead:
                     projectiles.remove(p)
 
+            # Auto-fire player weapons
+            player.auto_fire(dt, enemies, projectiles)
+
             # Update enemies
             for e in enemies:
-                e.update(dt, player, world_objects, spatial_grid)
+                e.update(dt, player, world_objects, spatial_grid, enemies)
                 # check collision with player (mask-based)
                 try:
                     if e.overlaps(player.pos, player.get_mask()):
-                        e.on_hit_player(player)
+                        # Apply contact damage with cooldown per enemy
+                        now = pygame.time.get_ticks() / 1000.0
+                        if now - getattr(e, 'last_contact_time', -9999.0) >= getattr(e, 'contact_cooldown', 0.7):
+                            e.last_contact_time = now
+                            player.take_damage(getattr(e, 'contact_damage', 1))
                 except Exception:
                     pass
 
@@ -284,6 +291,9 @@ def main():
             # Add player to render list
             player_depth = player.pos.y + player.get_image().get_height() / 2
             render_list.append((player_depth, player, "player"))
+
+            # Remove dead enemies before rendering
+            enemies[:] = [en for en in enemies if not en.dead]
 
             # Include visible enemies in render list
             for e in enemies:

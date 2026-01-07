@@ -8,7 +8,7 @@ class Projectile:
     Handles direction, speed, lifetime, and simple linear movement.
     """
 
-    def __init__(self, pos, direction, speed=500, lifetime=5.0, damage=10, radius=8):
+    def __init__(self, pos, direction, speed=500, lifetime=5.0, damage=10, radius=8, image_path=None):
         self.pos = pygame.Vector2(pos)
         self.direction = direction.normalize() if direction.length() > 0 else pygame.Vector2(1, 0)
         self.speed = speed
@@ -17,6 +17,13 @@ class Projectile:
         self.damage = damage
         self.radius = radius
         self.dead = False
+        self.image = None
+        self.image_path = image_path
+        if image_path:
+            try:
+                self.image = pygame.image.load(image_path).convert_alpha()
+            except Exception:
+                self.image = None
 
     def update(self, dt):
         """Update projectile position and lifetime."""
@@ -35,7 +42,12 @@ class Projectile:
     def draw(self, surface, camera):
         """Draw projectile as a simple circle."""
         screen_pos = camera.apply(self.pos)
-        pygame.draw.circle(surface, (255, 255, 0), (int(screen_pos.x), int(screen_pos.y)), self.radius)
+        if self.image:
+            img = self.image
+            rect = img.get_rect(center=(int(screen_pos.x), int(screen_pos.y)))
+            surface.blit(img, rect)
+        else:
+            pygame.draw.circle(surface, (255, 255, 0), (int(screen_pos.x), int(screen_pos.y)), self.radius)
 
     def check_collision_with_enemy(self, enemy):
         """Check if projectile hits an enemy (simple circular collision)."""

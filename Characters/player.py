@@ -30,6 +30,16 @@ class Player:
         self.attack_speed = 500  # projectile speed
         self.attack_damage = 10
         self.last_attack_direction = pygame.Vector2(1, 0)
+        # Health
+        self.max_health = 100
+        self.health = self.max_health
+        # Weapon (defaults - subclasses override)
+        self.weapon_fire_rate = getattr(self, 'weapon_fire_rate', None)
+        self.weapon_damage = getattr(self, 'weapon_damage', None)
+        self.weapon_image = getattr(self, 'weapon_image', None)
+        self.weapon_range = getattr(self, 'weapon_range', None)
+        # Initialize last fire so player can fire immediately on start
+        self.weapon_last_fire = float(self.weapon_fire_rate) if self.weapon_fire_rate else 0.0
 
     def _load_image(self):
         if self._image_loaded:
@@ -147,6 +157,26 @@ class Player:
         img = self._image_flipped if self.facing_left else self._image
         rect = img.get_rect(center=(int(screen_pos.x), int(screen_pos.y)))
         surface.blit(img, rect)
+        # Draw health bar above player
+        bar_width = max(40, img.get_width())
+        bar_height = 6
+        bar_x = int(screen_pos.x - bar_width / 2)
+        bar_y = int(screen_pos.y - img.get_height() / 2) - 10
+        # Background (red for missing health)
+        pygame.draw.rect(surface, (100, 0, 0), (bar_x, bar_y, bar_width, bar_height))
+        # Foreground (green for current health)
+        hp_frac = max(0.0, min(1.0, self.health / float(self.max_health)))
+        green_width = int(bar_width * hp_frac)
+        if green_width > 0:
+            pygame.draw.rect(surface, (0, 200, 0), (bar_x, bar_y, green_width, bar_height))
+
+    def take_damage(self, amount):
+        """Apply damage to player. Returns True if player died."""
+        self.health -= amount
+        if self.health <= 0:
+            self.health = 0
+            return True
+        return False
 
     def try_attack(self, dt):
         """Update attack cooldown and return True if ready to attack."""
@@ -159,5 +189,54 @@ class Player:
     def fire_projectile(self, direction):
         """Create a projectile in the given direction. Return the Projectile instance."""
         from projectile import Projectile
-        return Projectile(self.pos.copy(), direction, self.attack_speed, lifetime=5.0, 
-                         damage=self.attack_damage)
+        # Determine projectile speed baseline: twice player speed
+        speed = max(self.attack_speed, self.speed * 2)
+        img_path = None
+        if self.weapon_image:
+            img_path = self.weapon_image
+        lifetime = 5.0
+        if self.weapon_range is not None:
+            lifetime = max(0.1, self.weapon_range / float(speed))
+        return Projectile(self.pos.copy(), direction, speed=speed, lifetime=lifetime,
+                          damage=self.weapon_damage or self.attack_damage, radius=6, image_path=img_path)
+
+    def get_closest_enemy(self, enemies, max_range=None):
+        """Return the closest enemy object from `enemies` or None if empty/not in range."""
+        best = None
+        best_d = None
+        for e in enemies:
+            if e.dead:
+                continue
+            d = (e.pos - self.pos).length()
+            if max_range is not None and d > max_range:
+                continue
+            if best is None or d < best_d:
+                best = e
+                best_d = d
+        return best
+
+    def auto_fire(self, dt, enemies, projectiles):
+        """Automatic weapon firing based on weapon_fire_rate and targeting closest enemy."""
+        if not self.weapon_fire_rate or not enemies:
+            return
+        self.weapon_last_fire += dt
+        if self.weapon_last_fire < self.weapon_fire_rate:
+            return
+        # Ready to fire
+        target = self.get_closest_enemy(enemies)
+        if not target:
+            return
+        # Aim at target
+        direction = (target.pos - self.pos)
+        if direction.length() == 0:
+            direction = pygame.Vector2(1, 0)
+        else:
+            direction = direction.normalize()
+        proj = self.fire_projectile(direction)
+        projectiles.append(proj)
+        # Debug print for firing (visible when running from source)
+        try:
+            print(f"Auto-fire: {self.__class__.__name__} fired at enemy at {target.pos} with damage {proj.damage}")
+        except Exception:
+            pass
+        self.weapon_last_fire = 0.0

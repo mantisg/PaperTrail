@@ -17,6 +17,10 @@ class Enemy:
         self._image_loaded = False
         self.dead = False
         self.health = self.max_health
+        # Contact damage state
+        self.contact_damage = 1
+        self.contact_cooldown = 0.7
+        self.last_contact_time = -9999.0
 
     def _load_image(self):
         if self._image_loaded:
@@ -54,7 +58,7 @@ class Enemy:
         rect = img.get_rect(center=(int(screen_pos.x), int(screen_pos.y)))
         surface.blit(img, rect)
 
-    def update(self, dt, player, world_objects, spatial_grid=None):
+    def update(self, dt, player, world_objects, spatial_grid=None, enemies=None):
         """Basic enemy update: seek towards player with simple obstacle avoidance.
         """
         if self.dead:
@@ -95,14 +99,33 @@ class Enemy:
 
         new_pos = self.pos + movement
 
-        # Collision with static objects: prevent overlap
+        # Collision with static objects: prevent overlap using bottom-third partial masks
         # Check potential collisions; if colliding, attempt simple steering adjustments
         collision = False
         enemy_mask = self.get_mask()
         for obj in nearby:
-            # Only collide with trees and bushes
+            # Only collide with trees and bushes using their bottom-third mask so enemies can go behind
             if obj.__class__.__name__ in ("Tree", "Bush"):
-                if obj.overlaps(new_pos, enemy_mask):
+                try:
+                    if obj.overlaps_partial(new_pos, enemy_mask, use_self_partial=True):
+                        collision = True
+                        break
+                except Exception:
+                    # Fallback to full overlap check
+                    if obj.overlaps(new_pos, enemy_mask):
+                        collision = True
+                        break
+
+        # Also check collisions with other enemies (prevent stacking)
+        if not collision and enemies is not None:
+            from collision import objects_overlap
+            for other in enemies:
+                if other is self or other.dead:
+                    continue
+                # quick distance check to avoid expensive mask ops
+                if (self.pos - other.pos).length_squared() > ((self.get_image().get_width() + other.get_image().get_width())) ** 2:
+                    continue
+                if objects_overlap(self, new_pos, other, other.pos):
                     collision = True
                     break
 
@@ -110,8 +133,55 @@ class Enemy:
             self.pos = new_pos
             return
 
+        # Try a lightweight tangent-slide around the blocking object(s) first
+        blockers = []
+        for obj in nearby:
+            if obj.__class__.__name__ in ("Tree", "Bush"):
+                try:
+                    if obj.overlaps_partial(new_pos, enemy_mask, use_self_partial=True):
+                        blockers.append(obj)
+                except Exception:
+                    if obj.overlaps(new_pos, enemy_mask):
+                        blockers.append(obj)
+
+        if blockers:
+            # compute average offset from blockers to enemy to estimate tangent
+            avg_offset = pygame.Vector2(0, 0)
+            for b in blockers:
+                avg_offset += (self.pos - b.pos)
+            avg_offset /= max(1, len(blockers))
+            # tangent vector (perpendicular) to try sliding along
+            tangent = pygame.Vector2(-avg_offset.y, avg_offset.x)
+            if tangent.length() > 0:
+                tangent = tangent.normalize()
+                for sign in (1, -1):
+                    test_move = tangent * sign * self.speed * dt
+                    test_pos = self.pos + test_move
+                    blocked = False
+                    for obj in nearby:
+                        if obj.__class__.__name__ in ("Tree", "Bush"):
+                            try:
+                                if obj.overlaps_partial(test_pos, enemy_mask, use_self_partial=True):
+                                    blocked = True
+                                    break
+                            except Exception:
+                                if obj.overlaps(test_pos, enemy_mask):
+                                    blocked = True
+                                    break
+                    if not blocked and enemies is not None:
+                        from collision import objects_overlap
+                        for other in enemies:
+                            if other is self or other.dead:
+                                continue
+                            if objects_overlap(self, test_pos, other, other.pos):
+                                blocked = True
+                                break
+                    if not blocked:
+                        self.pos = test_pos
+                        return
+
         # Try angle offsets to slide around obstacle
-        angles = [30, -30, 60, -60, 90, -90]
+        angles = [15, -15, 30, -30, 60, -60, 90, -90]
         for a in angles:
             rad = math.radians(a)
             cos, sin = math.cos(rad), math.sin(rad)
@@ -122,7 +192,21 @@ class Enemy:
             blocked = False
             for obj in nearby:
                 if obj.__class__.__name__ in ("Tree", "Bush"):
-                    if obj.overlaps(test_pos, enemy_mask):
+                    try:
+                        if obj.overlaps_partial(test_pos, enemy_mask, use_self_partial=True):
+                            blocked = True
+                            break
+                    except Exception:
+                        if obj.overlaps(test_pos, enemy_mask):
+                            blocked = True
+                            break
+            # check test_pos vs other enemies
+            if not blocked and enemies is not None:
+                from collision import objects_overlap
+                for other in enemies:
+                    if other is self or other.dead:
+                        continue
+                    if objects_overlap(self, test_pos, other, other.pos):
                         blocked = True
                         break
             if not blocked:
@@ -132,28 +216,20 @@ class Enemy:
         # otherwise remain in place
 
     def on_hit_player(self, player):
-        """Called when projectile hits this enemy. Takes damage and dies if health reaches 0."""
-        # When called from projectile collision, player is actually the damage amount
-        # But for consistency with contact damage, use a fixed amount
-        self.health -= 20  # Projectile damage
+        # Legacy placeholder kept for compatibility
+        pass
+
+    def take_damage(self, amount):
+        """Reduce health by amount and mark dead if depleted."""
+        try:
+            self.health -= amount
+        except Exception:
+            self.health = self.max_health - amount
         if self.health <= 0:
             self.dead = True
 
     def overlaps(self, other_pos, other_mask):
         """Check overlap between this enemy and another mask at other_pos."""
-        img = self.get_image()
-        self_rect = img.get_rect(center=(int(self.pos.x), int(self.pos.y)))
-
-        other_size = other_mask.get_size()
-        other_rect = pygame.Rect(int(other_pos.x - other_size[0] / 2),
-                                  int(other_pos.y - other_size[1] / 2),
-                                  other_size[0], other_size[1])
-
-        if not self_rect.colliderect(other_rect):
-            return False
-
-        offset = (other_rect.x - self_rect.x, other_rect.y - self_rect.y)
-        try:
-            return self._mask.overlap(other_mask, offset)
-        except Exception:
-            return True
+        # Delegate to centralized collision utilities
+        from collision import mask_vs_object
+        return mask_vs_object(other_mask, other_pos, self)
