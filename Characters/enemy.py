@@ -1,6 +1,8 @@
 import pygame
 import os
 import math
+import sys
+from asset_manager import get_asset_path
 
 
 class Enemy:
@@ -21,7 +23,10 @@ class Enemy:
             return
         if self.image_path:
             try:
-                img = pygame.image.load(self.image_path).convert_alpha()
+                load_path = self.image_path
+                if (not os.path.isabs(load_path)) and (not os.path.exists(load_path)):
+                    load_path = get_asset_path(os.path.basename(load_path))
+                img = pygame.image.load(load_path).convert_alpha()
             except Exception:
                 img = None
         else:
@@ -127,8 +132,12 @@ class Enemy:
         # otherwise remain in place
 
     def on_hit_player(self, player):
-        # Placeholder when enemy touches player
-        pass
+        """Called when projectile hits this enemy. Takes damage and dies if health reaches 0."""
+        # When called from projectile collision, player is actually the damage amount
+        # But for consistency with contact damage, use a fixed amount
+        self.health -= 20  # Projectile damage
+        if self.health <= 0:
+            self.dead = True
 
     def overlaps(self, other_pos, other_mask):
         """Check overlap between this enemy and another mask at other_pos."""

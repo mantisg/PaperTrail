@@ -16,6 +16,8 @@ from spatial_grid import SpatialGrid
 from Characters.minion import Minion
 from Characters.attack_robot import AttackRobot
 from projectile import Projectile
+pygame.font.init()
+from asset_manager import get_asset_path
 
 
 pygame.font.init()
@@ -34,7 +36,7 @@ WORLD_W = WIDTH * 3
 WORLD_H = HEIGHT * 3
 
 # Load background tile (do not scale) and get tile size
-BG_TILE = pygame.image.load(os.path.join("assets", "paper_bg_3.png")).convert()
+BG_TILE = pygame.image.load(get_asset_path("paper_bg_3.png")).convert()
 TILE_W, TILE_H = BG_TILE.get_size()
 
 # Object spawn density per tile (0.0 to 1.0)
@@ -76,9 +78,9 @@ def main():
     # Character selection screen before starting
     def character_selection_screen(screen):
         choices = [
-            ("CircleNinja", os.path.join("assets", "Circle-Ninja.png"), CircleNinja),
-            ("Starficer", os.path.join("assets", "starficer.png"), Starficer),
-            ("TriangleWizard", os.path.join("assets", "Triangle-Wizard.png"), TriangleWizard),
+            ("CircleNinja", get_asset_path("Circle-Ninja.png"), CircleNinja),
+            ("Starficer", get_asset_path("starficer.png"), Starficer),
+            ("TriangleWizard", get_asset_path("Triangle-Wizard.png"), TriangleWizard),
         ]
 
         imgs = []
@@ -128,7 +130,7 @@ def main():
     # Place player at center of the world so they appear centered on the world
     player = SelectedClass((WORLD_W / 2, WORLD_H / 2))
     camera = Camera((WIDTH, HEIGHT), (WORLD_W, WORLD_H))
-    pause_menu = PauseMenu(WIDTH, HEIGHT, os.path.join("assets", "Exit-Button.png"))
+    pause_menu = PauseMenu(WIDTH, HEIGHT, get_asset_path("Exit-Button.png"))
 
     # Pre-generate all world objects for the entire world
     for tile_y in range(0, WORLD_H, TILE_H):

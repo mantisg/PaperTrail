@@ -1,5 +1,7 @@
 import pygame
 import os
+import sys
+from asset_manager import get_asset_path
 
 
 class PauseMenu:
@@ -7,7 +9,10 @@ class PauseMenu:
         self.width = width
         self.height = height
         self.blur_scale = blur_scale
-        self.exit_img = pygame.image.load(exit_image_path).convert_alpha()
+        img_path = exit_image_path
+        if (not os.path.isabs(img_path)) and (not os.path.exists(img_path)):
+            img_path = get_asset_path(os.path.basename(img_path))
+        self.exit_img = pygame.image.load(img_path).convert_alpha()
         self.paused = False
         self.blurred = None
         self.exit_rect = None

@@ -1,6 +1,7 @@
 import pygame
 import os
 import math
+from asset_manager import get_asset_path
 
 
 class Player:
@@ -36,7 +37,11 @@ class Player:
 
         if self.image_path:
             try:
-                img = pygame.image.load(self.image_path).convert_alpha()
+                load_path = self.image_path
+                # Resolve relative paths when running from PyInstaller bundle
+                if (not os.path.isabs(load_path)) and (not os.path.exists(load_path)):
+                    load_path = get_asset_path(os.path.basename(load_path))
+                img = pygame.image.load(load_path).convert_alpha()
             except Exception:
                 img = None
         else:
