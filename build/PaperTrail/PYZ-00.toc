@@ -31,6 +31,7 @@
   ('Objects.game_object',
    'C:\\Users\\josh\\PaperTrail\\Objects\\game_object.py',
    'PYMODULE'),
+  ('Objects.pie', 'C:\\Users\\josh\\PaperTrail\\Objects\\pie.py', 'PYMODULE'),
   ('Objects.tree', 'C:\\Users\\josh\\PaperTrail\\Objects\\tree.py', 'PYMODULE'),
   ('__future__', 'C:\\Python313\\Lib\\__future__.py', 'PYMODULE'),
   ('_aix_support', 'C:\\Python313\\Lib\\_aix_support.py', 'PYMODULE'),
