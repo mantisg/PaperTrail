@@ -291,6 +291,30 @@ class Player:
         return Projectile(self.pos.copy(), direction, speed=speed, lifetime=lifetime,
                           damage=self.weapon_damage or self.attack_damage, radius=6, image_path=img_path)
 
+    def fire_radius_weapon(self):
+        """Create a radius weapon (melee swing). Return RadiusWeapon instance or None."""
+        weapon_type = getattr(self, 'weapon_type', None)
+        if weapon_type != 'radius':
+            return None
+        
+        from radius_weapon import RadiusWeapon
+        radius_size = getattr(self, 'weapon_radius_size', 80)
+        object_size = getattr(self, 'weapon_object_size', 50)
+        speed = getattr(self, 'weapon_speed', 4.0)
+        duration = getattr(self, 'weapon_duration', 0.5)
+        cooldown = getattr(self, 'weapon_cooldown', 1.0)
+        
+        return RadiusWeapon(
+            self.pos.copy(),
+            damage=self.weapon_damage or self.attack_damage,
+            radius_size=radius_size,
+            object_size=object_size,
+            speed=speed,
+            duration=duration,
+            cooldown=cooldown,
+            image_path=self.weapon_image
+        )
+
     def get_closest_enemy(self, enemies, max_range=None):
         """Return the closest enemy object from `enemies` or None if empty/not in range."""
         best = None
@@ -306,28 +330,74 @@ class Player:
                 best_d = d
         return best
 
-    def auto_fire(self, dt, enemies, projectiles):
-        """Automatic weapon firing based on weapon_fire_rate and targeting closest enemy."""
+    def auto_fire(self, dt, enemies, projectiles_or_weapons):
+        """Automatic weapon firing based on weapon_fire_rate and targeting closest enemy.
+        
+        Handles both projectile and radius weapons. Pass the appropriate list.
+        For radius weapons, the list will be updated with RadiusWeapon instances.
+        """
         if not self.weapon_fire_rate or not enemies:
             return
-        self.weapon_last_fire += dt
-        if self.weapon_last_fire < self.weapon_fire_rate:
+        # Respect per-weapon cooldown interval (projectiles use weapon_fire_rate,
+        # radius weapons use duration+cooldown)
+        interval = self._weapon_cooldown_interval()
+        if self.weapon_last_fire < interval:
             return
         # Ready to fire
         target = self.get_closest_enemy(enemies)
         if not target:
             return
-        # Aim at target
-        direction = (target.pos - self.pos)
-        if direction.length() == 0:
-            direction = pygame.Vector2(1, 0)
+        
+        # Fire based on weapon type
+        weapon_type = getattr(self, 'weapon_type', None)
+        
+        if weapon_type == 'radius':
+            # Fire radius weapon
+            weapon = self.fire_radius_weapon()
+            if weapon:
+                projectiles_or_weapons.append(weapon)
+                try:
+                    print(f"Auto-fire: {self.__class__.__name__} triggered radius weapon with damage {weapon.damage}")
+                except Exception:
+                    pass
         else:
-            direction = direction.normalize()
-        proj = self.fire_projectile(direction)
-        projectiles.append(proj)
-        # Debug print for firing (visible when running from source)
-        try:
-            print(f"Auto-fire: {self.__class__.__name__} fired at enemy at {target.pos} with damage {proj.damage}")
-        except Exception:
-            pass
+            # Fire projectile (default)
+            direction = (target.pos - self.pos)
+            if direction.length() == 0:
+                direction = pygame.Vector2(1, 0)
+            else:
+                direction = direction.normalize()
+            proj = self.fire_projectile(direction)
+            projectiles_or_weapons.append(proj)
+            # Debug print for firing (visible when running from source)
+            try:
+                print(f"Auto-fire: {self.__class__.__name__} fired at enemy at {target.pos} with damage {proj.damage}")
+            except Exception:
+                pass
+        
         self.weapon_last_fire = 0.0
+
+    def _weapon_cooldown_interval(self):
+        """Return cooldown interval in seconds before next weapon activation.
+
+        For radius weapons this is duration + cooldown; for projectiles use
+        `weapon_fire_rate`.
+        """
+        wtype = getattr(self, 'weapon_type', None)
+        if wtype == 'radius':
+            duration = getattr(self, 'weapon_duration', None)
+            cooldown = getattr(self, 'weapon_cooldown', None)
+            # fallback to weapon_fire_rate if specific fields missing
+            if duration is None or cooldown is None:
+                return getattr(self, 'weapon_fire_rate', 0.0)
+            return float(duration) + float(cooldown)
+        return float(getattr(self, 'weapon_fire_rate', 0.0))
+
+    def can_fire_weapon(self):
+        """Return True if weapon cooldown has elapsed and weapon can be fired now."""
+        interval = self._weapon_cooldown_interval()
+        return self.weapon_last_fire >= interval
+
+    def update_weapon_timer(self, dt):
+        """Advance internal weapon cooldown timer. Call once per frame."""
+        self.weapon_last_fire += dt

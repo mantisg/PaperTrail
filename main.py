@@ -8,6 +8,7 @@ from camera import Camera
 from Characters.player import Player
 from Characters.ninjircle import Ninjircle
 from Characters.triangle_wizard import Tridolf
+from Characters.sqwerewolf import Sqwerewolf
 from Characters.starficer import Starficer
 from Objects.tree import Tree
 from Objects.bush import Bush
@@ -16,7 +17,7 @@ from spatial_grid import SpatialGrid
 from Characters.minion import Minion
 from Characters.attack_robot import AttackRobot
 from projectile import Projectile
-pygame.font.init()
+from radius_weapon import RadiusWeapon
 from asset_manager import get_asset_path
 
 
@@ -80,6 +81,7 @@ def main():
         choices = [
             ("Ninjircle", get_asset_path("Ninjircle-1.png"), Ninjircle),
             ("Tridolf", get_asset_path("Tridolf-1.png"), Tridolf),
+            ("Sqwerewolf", get_asset_path("Sqwerewolf-1.png"), Sqwerewolf),
         ]
 
         imgs = []
@@ -190,8 +192,16 @@ def main():
                 if direction.length() > 0:
                     direction = direction.normalize()
                     # Try to attack
-                    if player.try_attack(dt):
-                        projectiles.append(player.fire_projectile(direction))
+                    if player.try_attack(dt) and player.can_fire_weapon():
+                        weapon_type = getattr(player, 'weapon_type', None)
+                        if weapon_type == 'radius':
+                            weapon = player.fire_radius_weapon()
+                            if weapon:
+                                projectiles.append(weapon)
+                                player.weapon_last_fire = 0.0
+                        else:
+                            projectiles.append(player.fire_projectile(direction))
+                            player.weapon_last_fire = 0.0
 
             # Let pause menu handle click events when paused
             result = pause_menu.handle_event(event)
@@ -208,19 +218,27 @@ def main():
                 enemies_spawned += 1
             player.handle_input(dt, world_objects, spatial_grid)
             camera.update(player.pos)
+            # Advance player's weapon cooldown timer
+            player.update_weapon_timer(dt)
 
-            # Update projectiles
+            # Update projectiles and radius weapons
             for p in projectiles[:]:  # Iterate over copy to allow removal
-                p.update(dt)
-                
+                # Handle radius weapons vs projectiles
+                if isinstance(p, RadiusWeapon):
+                    p.update(dt, player.pos)
+                else:
+                    p.update(dt)
+
                 # Check collision with enemies
                 for e in enemies[:]:
                     if p.check_collision_with_enemy(e):
                         e.take_damage(p.damage)
-                        p.dead = True
+                        # Only mark as dead on collision for projectiles
+                        if not isinstance(p, RadiusWeapon):
+                            p.dead = True
                         break
-                
-                # Remove dead projectiles
+
+                # Remove dead projectiles/weapons
                 if p.dead:
                     projectiles.remove(p)
 

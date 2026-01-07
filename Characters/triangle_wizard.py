@@ -9,7 +9,8 @@ class Tridolf(Player):
         get_asset_path("Tridolf-2.png"),
         get_asset_path("Tridolf-3.png"),
     ]
-    # Weapon: wizard confetti (kept from previous)
+    # Weapon: wizard confetti (projectile type)
+    weapon_type = "projectile"
     weapon_fire_rate = 1.0
     weapon_damage = 10
     weapon_image = get_asset_path("WizardConfetti.png")

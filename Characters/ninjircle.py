@@ -14,7 +14,8 @@ class Ninjircle(Player):
         get_asset_path("Ninjircle-2_1.png"),
     ]
 
-    # Weapon: ninja stars
+    # Weapon: ninja stars (projectile type)
+    weapon_type = "projectile"
     weapon_fire_rate = 0.5
     weapon_damage = 5
     weapon_image = get_asset_path("NinjaStar.png")
