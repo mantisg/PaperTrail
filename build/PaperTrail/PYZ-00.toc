@@ -1014,6 +1014,7 @@
   ('tempfile', 'C:\\Python313\\Lib\\tempfile.py', 'PYMODULE'),
   ('textwrap', 'C:\\Python313\\Lib\\textwrap.py', 'PYMODULE'),
   ('threading', 'C:\\Python313\\Lib\\threading.py', 'PYMODULE'),
+  ('title_screen', 'C:\\Users\\josh\\PaperTrail\\title_screen.py', 'PYMODULE'),
   ('tkinter', 'C:\\Python313\\Lib\\tkinter\\__init__.py', 'PYMODULE'),
   ('tkinter.constants',
    'C:\\Python313\\Lib\\tkinter\\constants.py',

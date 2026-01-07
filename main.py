@@ -19,6 +19,7 @@ from Characters.attack_robot import AttackRobot
 from projectile import Projectile
 from radius_weapon import RadiusWeapon
 from asset_manager import get_asset_path
+from title_screen import TitleScreen
 
 
 pygame.font.init()
@@ -71,6 +72,10 @@ def generate_objects_in_tile(tile_x, tile_y, seed_offset=0):
 def main():
     FPS = 60
     clock = pygame.time.Clock()
+
+    # Show title screen first
+    title_screen = TitleScreen(WIDTH, HEIGHT)
+    title_screen.run(screen)
 
     # Global list to hold all spawned objects (trees, bushes, etc.)
     world_objects = []
