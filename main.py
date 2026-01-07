@@ -6,10 +6,9 @@ import tkinter as tk
 import sys
 from camera import Camera
 from Characters.player import Player
-from Characters.circle_ninja import CircleNinja
 from Characters.ninjircle import Ninjircle
+from Characters.triangle_wizard import Tridolf
 from Characters.starficer import Starficer
-from Characters.triangle_wizard import TriangleWizard
 from Objects.tree import Tree
 from Objects.bush import Bush
 from pause_menu import PauseMenu
@@ -79,10 +78,8 @@ def main():
     # Character selection screen before starting
     def character_selection_screen(screen):
         choices = [
-            ("CircleNinja", get_asset_path("Circle-Ninja.png"), CircleNinja),
             ("Ninjircle", get_asset_path("Ninjircle-1.png"), Ninjircle),
-            ("Starficer", get_asset_path("starficer.png"), Starficer),
-            ("TriangleWizard", get_asset_path("Triangle-Wizard.png"), TriangleWizard),
+            ("Tridolf", get_asset_path("Tridolf-1.png"), Tridolf),
         ]
 
         imgs = []

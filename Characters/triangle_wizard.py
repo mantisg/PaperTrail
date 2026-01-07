@@ -1,11 +1,15 @@
 from .player import Player
-import os
 from asset_manager import get_asset_path
 
 
-class TriangleWizard(Player):
-    image_path = os.path.join("assets", "Triangle-Wizard.png")
-    # Weapon: wizard confetti
+class Tridolf(Player):
+    # Multi-frame images: standing + moving frames
+    standing_image_path = get_asset_path("Tridolf-1.png")
+    moving_image_paths = [
+        get_asset_path("Tridolf-2.png"),
+        get_asset_path("Tridolf-3.png"),
+    ]
+    # Weapon: wizard confetti (kept from previous)
     weapon_fire_rate = 1.0
     weapon_damage = 10
     weapon_image = get_asset_path("WizardConfetti.png")

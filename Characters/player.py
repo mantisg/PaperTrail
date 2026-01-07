@@ -23,6 +23,20 @@ class Player:
         self._partial_mask = None  # Cache for bottom third
         self._image_loaded = False
         self.facing_left = False
+        # Animation / multi-frame sprite support
+        # Subclasses may set `standing_image_path` (string) and
+        # `moving_image_paths` (list of strings). If not set, the
+        # legacy `image_path` is used as a single-frame sprite.
+        self.standing_image_path = getattr(self, 'standing_image_path', None)
+        self.moving_image_paths = getattr(self, 'moving_image_paths', None)
+        self._standing_img = None
+        self._standing_img_flipped = None
+        self._moving_imgs = None
+        self._moving_imgs_flipped = None
+        self.is_moving = False
+        self.animation_timer = 0.0
+        self.ANIMATION_FRAME_TIME = getattr(self, 'ANIMATION_FRAME_TIME', 0.4)
+        self.current_moving_frame = 0
 
         # Attack system
         self.last_attack_time = 0
@@ -44,7 +58,49 @@ class Player:
     def _load_image(self):
         if self._image_loaded:
             return
+        # Prefer multi-frame sprite fields if provided by subclass
+        # Load standing + moving frames, else fall back to legacy single image
+        def _resolve(path):
+            if not path:
+                return None
+            load_path = path
+            if (not os.path.isabs(load_path)) and (not os.path.exists(load_path)):
+                load_path = get_asset_path(os.path.basename(load_path))
+            try:
+                return pygame.image.load(load_path).convert_alpha()
+            except Exception:
+                return None
 
+        if self.standing_image_path or self.moving_image_paths:
+            # Load standing image
+            s_img = _resolve(self.standing_image_path) or None
+            if s_img is None:
+                s_img = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
+                pygame.draw.circle(s_img, (255, 0, 0), (self.radius, self.radius), self.radius)
+            self._standing_img = s_img
+            self._standing_img_flipped = pygame.transform.flip(s_img, True, False)
+
+            # Load moving images list
+            self._moving_imgs = []
+            self._moving_imgs_flipped = []
+            if self.moving_image_paths:
+                for p in self.moving_image_paths:
+                    m = _resolve(p)
+                    if m is None:
+                        m = s_img.copy()
+                    self._moving_imgs.append(m)
+                    self._moving_imgs_flipped.append(pygame.transform.flip(m, True, False))
+
+            # For collision and legacy use, keep _image/_mask referencing standing image
+            self._image = self._standing_img
+            self._image_flipped = self._standing_img_flipped
+            self._mask = pygame.mask.from_surface(self._image)
+            self._image_loaded = True
+            # initialize animation frame index
+            self.current_moving_frame = 0
+            return
+
+        # Legacy single-image path: keep previous behavior
         if self.image_path:
             try:
                 load_path = self.image_path
@@ -71,11 +127,21 @@ class Player:
     def get_image(self):
         if not self._image_loaded:
             self._load_image()
+        # If multi-frame sprites are present, select correct frame
+        if self._standing_img is not None and self._moving_imgs is not None:
+            if not getattr(self, 'is_moving', False) or not self._moving_imgs:
+                return self._standing_img_flipped if self.facing_left else self._standing_img
+            # moving: pick frame based on timer index
+            idx = int(self.current_moving_frame) % max(1, len(self._moving_imgs))
+            return self._moving_imgs_flipped[idx] if self.facing_left else self._moving_imgs[idx]
         return self._image_flipped if self.facing_left else self._image
 
     def get_mask(self):
         if not self._image_loaded:
             self._load_image()
+        # Prefer standing-image mask if available
+        if self._standing_img is not None:
+            return pygame.mask.from_surface(self._standing_img)
         return self._mask
 
     def get_partial_mask_bottom_third(self):
@@ -86,7 +152,10 @@ class Player:
         if not self._image_loaded:
             self._load_image()
 
-        w, h = self._mask.get_size()
+        # Use standing image as the base for partial mask when available
+        base_img = self._standing_img if self._standing_img is not None else self._image
+        base_mask = pygame.mask.from_surface(base_img)
+        w, h = base_mask.get_size()
         third_h = max(1, h // 3)
         
         # Create a new mask for the bottom third
@@ -96,9 +165,9 @@ class Player:
         for y in range(third_h):
             for x in range(w):
                 src_y = h - third_h + y  # Bottom third starts here
-                if self._mask.get_at((x, src_y)):
+                if base_mask.get_at((x, src_y)):
                     partial.set_at((x, y), True)
-        
+
         self._partial_mask = partial
         return self._partial_mask
 
@@ -115,6 +184,29 @@ class Player:
         if keys[pygame.K_d]:
             movement.x += 1
             self.facing_left = False
+
+        # Determine movement state for animation based on keys held
+        keys_pressed = keys[pygame.K_w] or keys[pygame.K_s] or keys[pygame.K_a] or keys[pygame.K_d]
+        was_moving = getattr(self, 'is_moving', False)
+        self.is_moving = keys_pressed
+
+        # Update animation timer while moving
+        if self.is_moving:
+            self.animation_timer += dt
+            # advance frames when timer exceeds threshold
+            if self.animation_timer >= self.ANIMATION_FRAME_TIME:
+                # consume intervals (support slow/fast dt)
+                steps = int(self.animation_timer / self.ANIMATION_FRAME_TIME)
+                self.animation_timer -= steps * self.ANIMATION_FRAME_TIME
+                if self._moving_imgs:
+                    # cycle through moving frames
+                    self.current_moving_frame = (self.current_moving_frame + steps) % len(self._moving_imgs)
+                else:
+                    self.current_moving_frame = 0
+        else:
+            # Reset to standing frame when not moving
+            self.animation_timer = 0.0
+            self.current_moving_frame = 0
 
         if movement.length_squared() > 0:
             movement = movement.normalize() * self.speed * dt
@@ -153,8 +245,7 @@ class Player:
 
     def draw(self, surface, camera):
         screen_pos = camera.apply(self.pos)
-        self._load_image()
-        img = self._image_flipped if self.facing_left else self._image
+        img = self.get_image()
         rect = img.get_rect(center=(int(screen_pos.x), int(screen_pos.y)))
         surface.blit(img, rect)
         # Draw health bar above player
