@@ -43,8 +43,8 @@ BG_TILE = pygame.image.load(get_asset_path("paper_bg_3.png")).convert()
 TILE_W, TILE_H = BG_TILE.get_size()
 
 # Object spawn density per tile (0.0 to 1.0)
-TREE_DENSITY = 0.20
-BUSH_DENSITY = 0.15
+TREE_DENSITY = 0.25
+BUSH_DENSITY = 0.20
 
 
 def generate_objects_in_tile(tile_x, tile_y, seed_offset=0):

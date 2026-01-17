@@ -15,3 +15,5 @@ class Tridolf(Player):
     weapon_damage = 10
     weapon_image = get_asset_path("WizardConfetti.png")
     weapon_range = 500
+    weapon_size = 10
+    weapon_speed = 600

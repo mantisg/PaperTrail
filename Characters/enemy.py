@@ -21,6 +21,9 @@ class Enemy:
         self.contact_damage = 1
         self.contact_cooldown = 0.7
         self.last_contact_time = -9999.0
+        self.tilt_time = 0.0
+        self.tilt_speed = 10.0
+        self.tilt_amplitude = 10.0
 
     def _load_image(self):
         if self._image_loaded:
@@ -54,9 +57,22 @@ class Enemy:
 
     def draw(self, surface, camera):
         screen_pos = camera.apply(self.pos)
-        img = self.get_image()
+        img = self.get_tilted_image()
         rect = img.get_rect(center=(int(screen_pos.x), int(screen_pos.y)))
         surface.blit(img, rect)
+
+    def get_tilted_image(self):
+        """
+        Returns a smoothly tilted version of the enemy sprite.
+        Rotation oscillates between -tilt_amplitude and +tilt_amplitude.
+        """
+        base_image = self.get_image()
+
+        # Sinusoidal oscillation
+        angle = math.sin(self.tilt_time * self.tilt_speed) * self.tilt_amplitude
+
+        rotated = pygame.transform.rotate(base_image, angle)
+        return rotated
 
     def update(self, dt, player, world_objects, spatial_grid=None, enemies=None):
         """Basic enemy update: seek towards player with simple obstacle avoidance.
@@ -65,6 +81,7 @@ class Enemy:
             return
 
         # Desired velocity towards player
+        self.tilt_time += dt
         to_player = (player.pos - self.pos)
         dist = to_player.length()
         if dist > 0:

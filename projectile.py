@@ -8,14 +8,29 @@ class Projectile:
     Handles direction, speed, lifetime, and simple linear movement.
     """
 
-    def __init__(self, pos, direction, speed=500, lifetime=5.0, damage=10, radius=8, image_path=None):
+    def __init__(self, pos, direction, speed=500, lifetime=5.0, damage=10, radius=8, image_path=None,
+                 size_mult=1.0, speed_mult=1.0):
+        """Create a projectile.
+
+        `size_mult` and `speed_mult` are multipliers applied to the base `radius`
+        and `speed` respectively. Use a base of 1.0 when no multipliers are
+        provided so callers can treat these as optional upgrades.
+        """
         self.pos = pygame.Vector2(pos)
         self.direction = direction.normalize() if direction.length() > 0 else pygame.Vector2(1, 0)
-        self.speed = speed
+        # Apply speed multiplier to base speed
+        try:
+            self.speed = float(speed) * float(speed_mult)
+        except Exception:
+            self.speed = float(speed)
         self.lifetime = lifetime
         self.age = 0
         self.damage = damage
-        self.radius = radius
+        # Apply size multiplier to base radius (ensure at least 1 px)
+        try:
+            self.radius = max(1, int(radius * float(size_mult)))
+        except Exception:
+            self.radius = int(radius)
         self.dead = False
         self.image = None
         self.image_path = image_path

@@ -20,6 +20,8 @@ class Ninjircle(Player):
     weapon_damage = 5
     weapon_image = get_asset_path("NinjaStar.png")
     weapon_range = 400
+    weapon_size = 6
+    weapon_speed = 700
 
     # Optional: tweak animation timing for this subclass
     ANIMATION_FRAME_TIME = 0.3

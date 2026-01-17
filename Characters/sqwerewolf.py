@@ -20,7 +20,7 @@ class Sqwerewolf(Player):
     weapon_radius_size = 90   # Distance from player to orbit path
     weapon_object_size = 50   # Size of attack object
     weapon_speed = 4.0        # Radians per second (orbital speed)
-    weapon_duration = 1.5     # Active duration
+    weapon_duration = 3.0     # Active duration
     weapon_cooldown = 0.7     # Cooldown duration (matches fire_rate)
     
     def __init__(self, pos, radius=40, speed=300):
