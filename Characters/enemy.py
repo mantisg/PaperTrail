@@ -2,6 +2,7 @@ import pygame
 import os
 import math
 import sys
+import random
 from asset_manager import get_asset_path
 
 
@@ -21,8 +22,8 @@ class Enemy:
         self.contact_damage = 1
         self.contact_cooldown = 0.7
         self.last_contact_time = -9999.0
-        self.tilt_time = 0.0
         self.tilt_speed = 10.0
+        self.tilt_time = random.uniform(0, 2 * math.pi / self.tilt_speed)
         self.tilt_amplitude = 10.0
 
     def _load_image(self):
