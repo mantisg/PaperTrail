@@ -43,8 +43,11 @@ pygame.display.set_caption("PaperTrail: Escape from this Dimension")
 
 
 # World size (bigger than screen so player can move through environment)
-WORLD_W = WIDTH * 3
-WORLD_H = HEIGHT * 3
+WORLD_W = int(WIDTH * 3.75)
+WORLD_H = int(HEIGHT * 3.75)
+
+# Border distance from world edge (player radius = 40)
+BORDER_DISTANCE = 40
 
 # Load background tile (do not scale) and get tile size
 BG_TILE = pygame.image.load(get_asset_path("paper_bg_3.png")).convert()
@@ -358,6 +361,11 @@ def main():
                                 minibosses_spawned = 0
                 
                 player.handle_input(dt, world_objects, spatial_grid)
+                
+                # Apply border collision - keep player within map bounds
+                player.pos.x = max(BORDER_DISTANCE, min(WORLD_W - BORDER_DISTANCE, player.pos.x))
+                player.pos.y = max(BORDER_DISTANCE, min(WORLD_H - BORDER_DISTANCE, player.pos.y))
+                
                 camera.update(player.pos)
                 # Advance player's weapon cooldown timer
                 player.update_weapon_timer(dt)
