@@ -201,7 +201,7 @@ def main():
         else:
             sample_items = all_items
         
-        ITEM_DROP_COUNT = 4
+        ITEM_DROP_COUNT = 6
         item_attempts = 0
         while len(item_drops) < ITEM_DROP_COUNT and item_attempts < 200:
             item_attempts += 1
