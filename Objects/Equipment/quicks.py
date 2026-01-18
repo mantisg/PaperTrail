@@ -12,8 +12,8 @@ class Quicks(Equipment):
         """Initialize Quicks equipment."""
         super().__init__(
             name="Quicks",
-            description="Speed +20% (stacks). Gotta go fast!",
-            rarity="uncommon",
+            description="I am speeeeeed!!!! +20% move speed (stacks)",
+            rarity="common",
             image_path=get_asset_path("Quicks-card.png")
         )
     

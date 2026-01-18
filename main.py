@@ -219,9 +219,16 @@ def main():
         
         # Enemy list
         enemies = []
+        
+        # Wave system: list of (wave_time_seconds, wave_minion_count)
+        waves = [
+            (0.0, 30),      # Initial wave at 0:00 with 30 minions
+            (10.0, 50),     # Second wave at 0:10 with 50 minions
+        ]
+        wave_index = 0
         wave_spawn_time = 0.0
-        wave_spawn_duration = 10.0  # Spawn over 10 seconds
-        wave_spawn_count = 30
+        wave_spawn_duration = 10.0  # Spawn each wave over 10 seconds
+        wave_spawn_count = 0
         enemies_spawned = 0
 
         def spawn_minion():
@@ -234,17 +241,30 @@ def main():
                 pos = pygame.Vector2(x, y)
                 # Require spawn outside player's view (at least one screen away)
                 if pos.distance_to(pygame.Vector2(WORLD_W / 2, WORLD_H / 2)) > max(WIDTH, HEIGHT):
-                    enemies.append(Minion((x, y)))
+                    minion_type = random.choice(["multiply", "positive", "divisive"])
+                    enemies.append(Minion((x, y), minion_type=minion_type))
                     return True
             return False
 
         # Projectiles list
         projectiles = []
+        
+        # Game timer
+        game_timer = 0.0  # Elapsed time in seconds
+        MAX_GAME_TIME = 20 * 60  # 20 minutes in seconds
+        
+        # Create font for timer display
+        timer_font = pygame.font.Font(None, 56)
 
         # Inner game loop for current game session
         running = True
         while running:
             dt = clock.tick(FPS) / 1000.0
+            
+            # Update game timer
+            game_timer += dt
+            if game_timer > MAX_GAME_TIME:
+                game_timer = MAX_GAME_TIME
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -289,12 +309,23 @@ def main():
                     running = False
 
             if not pause_menu.paused:
-                # Update wave spawn timer
-                wave_spawn_time += dt
-                target_spawned = int((wave_spawn_time / wave_spawn_duration) * wave_spawn_count)
-                while enemies_spawned < target_spawned and enemies_spawned < wave_spawn_count:
-                    spawn_minion()
-                    enemies_spawned += 1
+                # Check if a new wave should start
+                if wave_index < len(waves):
+                    wave_start_time, wave_count = waves[wave_index]
+                    if game_timer >= wave_start_time:
+                        # Wave has started, spawn minions
+                        time_into_wave = game_timer - wave_start_time
+                        if time_into_wave >= 0:
+                            target_spawned = int((time_into_wave / wave_spawn_duration) * wave_count)
+                            while enemies_spawned < target_spawned and enemies_spawned < wave_count:
+                                spawn_minion()
+                                enemies_spawned += 1
+                            
+                            # Check if wave is complete
+                            if enemies_spawned >= wave_count and time_into_wave > wave_spawn_duration:
+                                wave_index += 1
+                                enemies_spawned = 0
+                
                 player.handle_input(dt, world_objects, spatial_grid)
                 camera.update(player.pos)
                 # Advance player's weapon cooldown timer
@@ -507,6 +538,14 @@ def main():
                 
                 # Draw recently added item notifications
                 inventory_ui.draw_notifications(screen)
+                
+                # Draw game timer at top center
+                minutes = int(game_timer) // 60
+                seconds = int(game_timer) % 60
+                timer_text = f"{minutes:02d}:{seconds:02d}"
+                timer_surface = timer_font.render(timer_text, True, (0, 0, 0))
+                timer_rect = timer_surface.get_rect(center=(WIDTH // 2, 30))
+                screen.blit(timer_surface, timer_rect)
 
                 pygame.display.flip()
             else:

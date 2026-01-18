@@ -3,8 +3,13 @@ from asset_manager import get_asset_path
 
 
 class Minion(Enemy):
-    # For now, reuse multiply image; later other types map to different images
-    image_path = get_asset_path("minion-multiply.png")
+    # Map minion types to their sprite images
+    MINION_SPRITES = {
+        "multiply": get_asset_path("minion-multiply.png"),
+        "positive": get_asset_path("positive.png"),
+        "divisive": get_asset_path("divisive.png"),
+    }
+    
     speed = 140
     max_health = 2
     contact_damage = 1
@@ -14,3 +19,9 @@ class Minion(Enemy):
         super().__init__(pos)
         self.type = minion_type
         self.health = self.max_health
+        
+        # Set image based on minion type
+        if minion_type in self.MINION_SPRITES:
+            self.image_path = self.MINION_SPRITES[minion_type]
+        else:
+            self.image_path = self.MINION_SPRITES["multiply"]  # Default to multiply
