@@ -2,6 +2,7 @@ import pygame
 import os
 import math
 from asset_manager import get_asset_path
+from inventory import Inventory
 
 
 class Player:
@@ -15,6 +16,7 @@ class Player:
     def __init__(self, pos, radius=40, speed=300):
         self.pos = pygame.Vector2(pos)
         self.radius = radius
+        self.base_speed = speed  # Store base speed for equipment calculations
         self.speed = speed
 
         self._image = None
@@ -54,6 +56,10 @@ class Player:
         self.weapon_range = getattr(self, 'weapon_range', None)
         # Initialize last fire so player can fire immediately on start
         self.weapon_last_fire = float(self.weapon_fire_rate) if self.weapon_fire_rate else 0.0
+        # Inventory system
+        self.inventory = Inventory()
+        # Active weapons that are currently providing effects
+        self.active_weapons = []
 
     def _load_image(self):
         if self._image_loaded:
@@ -269,6 +275,25 @@ class Player:
             return True
         return False
 
+    def update_speed_from_equipment(self):
+        """Recalculate effective speed based on active equipment.
+        
+        Counts Quicks equipment and applies cumulative bonuses to base speed.
+        Each Quicks adds 20% to base speed (multiplicative).
+        """
+        from Objects.Equipment.quicks import Quicks
+        
+        # Count Quicks in inventory
+        quicks_count = sum(1 for item in self.inventory.equipment if isinstance(item, Quicks))
+        
+        # Calculate cumulative multiplier: 1.0 + (0.2 * quicks_count)
+        # With 0 Quicks: 1.0x (100% of base)
+        # With 1 Quicks: 1.2x (120% of base)
+        # With 2 Quicks: 1.4x (140% of base)
+        # etc.
+        speed_multiplier = 1.0 + (0.2 * quicks_count)
+        self.speed = self.base_speed * speed_multiplier
+
     def try_attack(self, dt):
         """Update attack cooldown and return True if ready to attack."""
         self.last_attack_time += dt
@@ -331,51 +356,52 @@ class Player:
         return best
 
     def auto_fire(self, dt, enemies, projectiles_or_weapons):
-        """Automatic weapon firing based on weapon_fire_rate and targeting closest enemy.
+        """Fire all active weapons at enemies.
         
-        Handles both projectile and radius weapons. Pass the appropriate list.
-        For radius weapons, the list will be updated with RadiusWeapon instances.
+        Each weapon in active_weapons is fired independently with its own cooldown.
         """
-        if not self.weapon_fire_rate or not enemies:
-            return
-        # Respect per-weapon cooldown interval (projectiles use weapon_fire_rate,
-        # radius weapons use duration+cooldown)
-        interval = self._weapon_cooldown_interval()
-        if self.weapon_last_fire < interval:
-            return
-        # Ready to fire
-        target = self.get_closest_enemy(enemies)
-        if not target:
+        if not enemies:
             return
         
-        # Fire based on weapon type
-        weapon_type = getattr(self, 'weapon_type', None)
-        
-        if weapon_type == 'radius':
-            # Fire radius weapon
-            weapon = self.fire_radius_weapon()
-            if weapon:
-                projectiles_or_weapons.append(weapon)
+        # Fire all active weapons
+        if hasattr(self, 'active_weapons') and self.active_weapons:
+            for weapon in self.active_weapons:
                 try:
-                    print(f"Auto-fire: {self.__class__.__name__} triggered radius weapon with damage {weapon.damage}")
-                except Exception:
+                    weapon.fire(self, enemies, projectiles_or_weapons)
+                except Exception as e:
+                    # Gracefully handle weapon firing errors
                     pass
         else:
-            # Fire projectile (default)
-            direction = (target.pos - self.pos)
-            if direction.length() == 0:
-                direction = pygame.Vector2(1, 0)
+            # Fallback to legacy weapon firing for backwards compatibility
+            if not self.weapon_fire_rate:
+                return
+            interval = self._weapon_cooldown_interval()
+            if self.weapon_last_fire < interval:
+                return
+            # Ready to fire
+            target = self.get_closest_enemy(enemies)
+            if not target:
+                return
+            
+            # Fire based on weapon type
+            weapon_type = getattr(self, 'weapon_type', None)
+            
+            if weapon_type == 'radius':
+                # Fire radius weapon
+                weapon = self.fire_radius_weapon()
+                if weapon:
+                    projectiles_or_weapons.append(weapon)
             else:
-                direction = direction.normalize()
-            proj = self.fire_projectile(direction)
-            projectiles_or_weapons.append(proj)
-            # Debug print for firing (visible when running from source)
-            try:
-                print(f"Auto-fire: {self.__class__.__name__} fired at enemy at {target.pos} with damage {proj.damage}")
-            except Exception:
-                pass
-        
-        self.weapon_last_fire = 0.0
+                # Fire projectile (default)
+                direction = (target.pos - self.pos)
+                if direction.length() == 0:
+                    direction = pygame.Vector2(1, 0)
+                else:
+                    direction = direction.normalize()
+                proj = self.fire_projectile(direction)
+                projectiles_or_weapons.append(proj)
+            
+            self.weapon_last_fire = 0.0
 
     def _weapon_cooldown_interval(self):
         """Return cooldown interval in seconds before next weapon activation.
@@ -399,5 +425,9 @@ class Player:
         return self.weapon_last_fire >= interval
 
     def update_weapon_timer(self, dt):
-        """Advance internal weapon cooldown timer. Call once per frame."""
+        """Advance internal weapon cooldown timer and active weapon timers. Call once per frame."""
         self.weapon_last_fire += dt
+        # Update all active weapons
+        if hasattr(self, 'active_weapons'):
+            for weapon in self.active_weapons:
+                weapon.update(dt)

@@ -1,0 +1,1 @@
+"""Equipment items package."""

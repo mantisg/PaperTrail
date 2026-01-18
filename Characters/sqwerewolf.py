@@ -1,5 +1,6 @@
 from .player import Player
 from asset_manager import get_asset_path
+from Objects.Weapons.squirrel_burst import SquirrelBurst
 
 class Sqwerewolf(Player):
     # Image paths (Player will load these if present)
@@ -8,6 +9,9 @@ class Sqwerewolf(Player):
         get_asset_path("Sqwerewolf-2.png"),
         get_asset_path("Sqwerewolf-3.png"),
     ]
+
+    # Starting weapon
+    starting_weapon_class = SquirrelBurst
 
     # Weapon: melee paw attack (radius weapon)
     weapon_fire_rate = 1.3
@@ -25,3 +29,8 @@ class Sqwerewolf(Player):
     
     def __init__(self, pos, radius=40, speed=300):
         super().__init__(pos, radius, speed)
+        # Add starting weapon to inventory
+        if hasattr(self, 'starting_weapon_class') and self.starting_weapon_class:
+            starting_weapon = self.starting_weapon_class()
+            self.inventory.add_item(starting_weapon)
+            starting_weapon.apply_effect(self)

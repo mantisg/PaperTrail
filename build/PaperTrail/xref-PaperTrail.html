@@ -25,7 +25,13 @@ imports:
  &#8226;   <a href="#Characters.sqwerewolf">Characters.sqwerewolf</a>
  &#8226;   <a href="#Characters.starficer">Characters.starficer</a>
  &#8226;   <a href="#Characters.triangle_wizard">Characters.triangle_wizard</a>
+ &#8226;   <a href="#Objects.Equipment.quicks">Objects.Equipment.quicks</a>
+ &#8226;   <a href="#Objects.Weapons.ninja_stars">Objects.Weapons.ninja_stars</a>
+ &#8226;   <a href="#Objects.Weapons.squirrel_burst">Objects.Weapons.squirrel_burst</a>
+ &#8226;   <a href="#Objects.Weapons.weapon">Objects.Weapons.weapon</a>
+ &#8226;   <a href="#Objects.Weapons.wizard_confetti">Objects.Weapons.wizard_confetti</a>
  &#8226;   <a href="#Objects.bush">Objects.bush</a>
+ &#8226;   <a href="#Objects.item_drop">Objects.item_drop</a>
  &#8226;   <a href="#Objects.pie">Objects.pie</a>
  &#8226;   <a href="#Objects.tree">Objects.tree</a>
  &#8226;   <a href="#_collections_abc">_collections_abc</a>
@@ -162,6 +168,7 @@ imports:
  &#8226;   <a href="#functools">functools</a>
  &#8226;   <a href="#genericpath">genericpath</a>
  &#8226;   <a href="#heapq">heapq</a>
+ &#8226;   <a href="#inventory">inventory</a>
  &#8226;   <a href="#io">io</a>
  &#8226;   <a href="#keyword">keyword</a>
  &#8226;   <a href="#linecache">linecache</a>
@@ -198,6 +205,7 @@ imports:
  &#8226;   <a href="#tkinter">tkinter</a>
  &#8226;   <a href="#traceback">traceback</a>
  &#8226;   <a href="#types">types</a>
+ &#8226;   <a href="#ui">ui</a>
  &#8226;   <a href="#warnings">warnings</a>
  &#8226;   <a href="#weakref">weakref</a>
 
@@ -510,6 +518,7 @@ imported by:
 imports:
     <a href="#Characters">Characters</a>
  &#8226;   <a href="#Characters.player">Characters.player</a>
+ &#8226;   <a href="#Objects.Weapons.ninja_stars">Objects.Weapons.ninja_stars</a>
  &#8226;   <a href="#asset_manager">asset_manager</a>
 
   </div>
@@ -527,7 +536,9 @@ imported by:
 <span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#Characters">Characters</a>
+ &#8226;   <a href="#Objects.Equipment.quicks">Objects.Equipment.quicks</a>
  &#8226;   <a href="#asset_manager">asset_manager</a>
+ &#8226;   <a href="#inventory">inventory</a>
  &#8226;   <a href="#math">math</a>
  &#8226;   <a href="#os">os</a>
  &#8226;   <a href="#projectile">projectile</a>
@@ -554,6 +565,7 @@ imported by:
 imports:
     <a href="#Characters">Characters</a>
  &#8226;   <a href="#Characters.player">Characters.player</a>
+ &#8226;   <a href="#Objects.Weapons.squirrel_burst">Objects.Weapons.squirrel_burst</a>
  &#8226;   <a href="#asset_manager">asset_manager</a>
 
   </div>
@@ -590,6 +602,7 @@ imported by:
 imports:
     <a href="#Characters">Characters</a>
  &#8226;   <a href="#Characters.player">Characters.player</a>
+ &#8226;   <a href="#Objects.Weapons.wizard_confetti">Objects.Weapons.wizard_confetti</a>
  &#8226;   <a href="#asset_manager">asset_manager</a>
 
   </div>
@@ -606,10 +619,166 @@ imported by:
   <a target="code" href="///C:/Users/josh/PaperTrail/Objects/__init__.py" type="text/plain"><tt>Objects</tt></a>
 <span class="moduletype">Package</span>  <div class="import">
 imported by:
-    <a href="#Objects.bush">Objects.bush</a>
+    <a href="#Objects.Equipment">Objects.Equipment</a>
+ &#8226;   <a href="#Objects.Weapons">Objects.Weapons</a>
+ &#8226;   <a href="#Objects.bush">Objects.bush</a>
  &#8226;   <a href="#Objects.game_object">Objects.game_object</a>
+ &#8226;   <a href="#Objects.item_drop">Objects.item_drop</a>
  &#8226;   <a href="#Objects.pie">Objects.pie</a>
  &#8226;   <a href="#Objects.tree">Objects.tree</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="Objects.Equipment"></a>
+  <a target="code" href="///C:/Users/josh/PaperTrail/Objects/Equipment/__init__.py" type="text/plain"><tt>Objects.Equipment</tt></a>
+<span class="moduletype">Package</span>  <div class="import">
+imports:
+    <a href="#Objects">Objects</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#Objects.Equipment.equipment">Objects.Equipment.equipment</a>
+ &#8226;   <a href="#Objects.Equipment.quicks">Objects.Equipment.quicks</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="Objects.Equipment.equipment"></a>
+  <a target="code" href="///C:/Users/josh/PaperTrail/Objects/Equipment/equipment.py" type="text/plain"><tt>Objects.Equipment.equipment</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#Objects.Equipment">Objects.Equipment</a>
+ &#8226;   <a href="#inventory">inventory</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#Objects.Equipment.quicks">Objects.Equipment.quicks</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="Objects.Equipment.quicks"></a>
+  <a target="code" href="///C:/Users/josh/PaperTrail/Objects/Equipment/quicks.py" type="text/plain"><tt>Objects.Equipment.quicks</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#Objects.Equipment">Objects.Equipment</a>
+ &#8226;   <a href="#Objects.Equipment.equipment">Objects.Equipment.equipment</a>
+ &#8226;   <a href="#asset_manager">asset_manager</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#Characters.player">Characters.player</a>
+ &#8226;   <a href="#main.py">main.py</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="Objects.Weapons"></a>
+  <a target="code" href="///C:/Users/josh/PaperTrail/Objects/Weapons/__init__.py" type="text/plain"><tt>Objects.Weapons</tt></a>
+<span class="moduletype">Package</span>  <div class="import">
+imports:
+    <a href="#Objects">Objects</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#Objects.Weapons.ninja_stars">Objects.Weapons.ninja_stars</a>
+ &#8226;   <a href="#Objects.Weapons.squirrel_burst">Objects.Weapons.squirrel_burst</a>
+ &#8226;   <a href="#Objects.Weapons.weapon">Objects.Weapons.weapon</a>
+ &#8226;   <a href="#Objects.Weapons.wizard_confetti">Objects.Weapons.wizard_confetti</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="Objects.Weapons.ninja_stars"></a>
+  <a target="code" href="///C:/Users/josh/PaperTrail/Objects/Weapons/ninja_stars.py" type="text/plain"><tt>Objects.Weapons.ninja_stars</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#Objects.Weapons">Objects.Weapons</a>
+ &#8226;   <a href="#Objects.Weapons.weapon">Objects.Weapons.weapon</a>
+ &#8226;   <a href="#asset_manager">asset_manager</a>
+ &#8226;   <a href="#projectile">projectile</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#Characters.ninjircle">Characters.ninjircle</a>
+ &#8226;   <a href="#main.py">main.py</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="Objects.Weapons.squirrel_burst"></a>
+  <a target="code" href="///C:/Users/josh/PaperTrail/Objects/Weapons/squirrel_burst.py" type="text/plain"><tt>Objects.Weapons.squirrel_burst</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#Objects.Weapons">Objects.Weapons</a>
+ &#8226;   <a href="#Objects.Weapons.weapon">Objects.Weapons.weapon</a>
+ &#8226;   <a href="#asset_manager">asset_manager</a>
+ &#8226;   <a href="#radius_weapon">radius_weapon</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#Characters.sqwerewolf">Characters.sqwerewolf</a>
+ &#8226;   <a href="#main.py">main.py</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="Objects.Weapons.weapon"></a>
+  <a target="code" href="///C:/Users/josh/PaperTrail/Objects/Weapons/weapon.py" type="text/plain"><tt>Objects.Weapons.weapon</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#Objects.Weapons">Objects.Weapons</a>
+ &#8226;   <a href="#inventory">inventory</a>
+ &#8226;   <a href="#projectile">projectile</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#Objects.Weapons.ninja_stars">Objects.Weapons.ninja_stars</a>
+ &#8226;   <a href="#Objects.Weapons.squirrel_burst">Objects.Weapons.squirrel_burst</a>
+ &#8226;   <a href="#Objects.Weapons.wizard_confetti">Objects.Weapons.wizard_confetti</a>
+ &#8226;   <a href="#main.py">main.py</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="Objects.Weapons.wizard_confetti"></a>
+  <a target="code" href="///C:/Users/josh/PaperTrail/Objects/Weapons/wizard_confetti.py" type="text/plain"><tt>Objects.Weapons.wizard_confetti</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#Objects.Weapons">Objects.Weapons</a>
+ &#8226;   <a href="#Objects.Weapons.weapon">Objects.Weapons.weapon</a>
+ &#8226;   <a href="#asset_manager">asset_manager</a>
+ &#8226;   <a href="#projectile">projectile</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#Characters.triangle_wizard">Characters.triangle_wizard</a>
+ &#8226;   <a href="#main.py">main.py</a>
 
   </div>
 
@@ -651,6 +820,24 @@ imported by:
     <a href="#Objects.bush">Objects.bush</a>
  &#8226;   <a href="#Objects.pie">Objects.pie</a>
  &#8226;   <a href="#Objects.tree">Objects.tree</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="Objects.item_drop"></a>
+  <a target="code" href="///C:/Users/josh/PaperTrail/Objects/item_drop.py" type="text/plain"><tt>Objects.item_drop</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#Objects">Objects</a>
+ &#8226;   <a href="#math">math</a>
+ &#8226;   <a href="#pygame">pygame</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#main.py">main.py</a>
 
   </div>
 
@@ -2641,6 +2828,10 @@ imported by:
  &#8226;   <a href="#Characters.player">Characters.player</a>
  &#8226;   <a href="#Characters.sqwerewolf">Characters.sqwerewolf</a>
  &#8226;   <a href="#Characters.triangle_wizard">Characters.triangle_wizard</a>
+ &#8226;   <a href="#Objects.Equipment.quicks">Objects.Equipment.quicks</a>
+ &#8226;   <a href="#Objects.Weapons.ninja_stars">Objects.Weapons.ninja_stars</a>
+ &#8226;   <a href="#Objects.Weapons.squirrel_burst">Objects.Weapons.squirrel_burst</a>
+ &#8226;   <a href="#Objects.Weapons.wizard_confetti">Objects.Weapons.wizard_confetti</a>
  &#8226;   <a href="#Objects.game_object">Objects.game_object</a>
  &#8226;   <a href="#collision">collision</a>
  &#8226;   <a href="#main.py">main.py</a>
@@ -9130,6 +9321,25 @@ imported by:
 </div>
 
 <div class="node">
+  <a name="inventory"></a>
+  <a target="code" href="///C:/Users/josh/PaperTrail/inventory.py" type="text/plain"><tt>inventory</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#pygame">pygame</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#Characters.player">Characters.player</a>
+ &#8226;   <a href="#Objects.Equipment.equipment">Objects.Equipment.equipment</a>
+ &#8226;   <a href="#Objects.Weapons.weapon">Objects.Weapons.weapon</a>
+ &#8226;   <a href="#main.py">main.py</a>
+
+  </div>
+
+</div>
+
+<div class="node">
   <a name="io"></a>
   <a target="code" href="///C:/Python313/Lib/io.py" type="text/plain"><tt>io</tt></a>
 <span class="moduletype">SourceModule</span>  <div class="import">
@@ -9588,6 +9798,7 @@ imported by:
 imported by:
     <a href="#Characters.enemy">Characters.enemy</a>
  &#8226;   <a href="#Characters.player">Characters.player</a>
+ &#8226;   <a href="#Objects.item_drop">Objects.item_drop</a>
  &#8226;   <a href="#_pydatetime">_pydatetime</a>
  &#8226;   <a href="#_pydecimal">_pydecimal</a>
  &#8226;   <a href="#asyncio.tasks">asyncio.tasks</a>
@@ -11829,6 +12040,9 @@ imports:
   <div class="import">
 imported by:
     <a href="#Characters.player">Characters.player</a>
+ &#8226;   <a href="#Objects.Weapons.ninja_stars">Objects.Weapons.ninja_stars</a>
+ &#8226;   <a href="#Objects.Weapons.weapon">Objects.Weapons.weapon</a>
+ &#8226;   <a href="#Objects.Weapons.wizard_confetti">Objects.Weapons.wizard_confetti</a>
  &#8226;   <a href="#main.py">main.py</a>
 
   </div>
@@ -12024,8 +12238,10 @@ imported by:
     <a href="#Characters.enemy">Characters.enemy</a>
  &#8226;   <a href="#Characters.player">Characters.player</a>
  &#8226;   <a href="#Objects.game_object">Objects.game_object</a>
+ &#8226;   <a href="#Objects.item_drop">Objects.item_drop</a>
  &#8226;   <a href="#camera">camera</a>
  &#8226;   <a href="#collision">collision</a>
+ &#8226;   <a href="#inventory">inventory</a>
  &#8226;   <a href="#main.py">main.py</a>
  &#8226;   <a href="#pause_menu">pause_menu</a>
  &#8226;   <a href="#projectile">projectile</a>
@@ -12073,6 +12289,7 @@ imported by:
  &#8226;   <a href="#radius_weapon">radius_weapon</a>
  &#8226;   <a href="#spatial_grid">spatial_grid</a>
  &#8226;   <a href="#title_screen">title_screen</a>
+ &#8226;   <a href="#ui">ui</a>
 
   </div>
 
@@ -12914,6 +13131,7 @@ imports:
   <div class="import">
 imported by:
     <a href="#Characters.player">Characters.player</a>
+ &#8226;   <a href="#Objects.Weapons.squirrel_burst">Objects.Weapons.squirrel_burst</a>
  &#8226;   <a href="#main.py">main.py</a>
 
   </div>
@@ -19438,6 +19656,22 @@ imported by:
     <a href="#setuptools._distutils.command.bdist">setuptools._distutils.command.bdist</a>
  &#8226;   <a href="#setuptools._distutils.sysconfig">setuptools._distutils.sysconfig</a>
  &#8226;   <a href="#typing_extensions">typing_extensions</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="ui"></a>
+  <a target="code" href="///C:/Users/josh/PaperTrail/ui.py" type="text/plain"><tt>ui</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#pygame">pygame</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#main.py">main.py</a>
 
   </div>
 

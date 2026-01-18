@@ -13,6 +13,11 @@ from Characters.starficer import Starficer
 from Objects.tree import Tree
 from Objects.bush import Bush
 from Objects.pie import Pie
+from Objects.item_drop import ItemDrop
+from Objects.Equipment.quicks import Quicks
+from Objects.Weapons.ninja_stars import NinjaStars
+from Objects.Weapons.wizard_confetti import WizardConfetti
+from Objects.Weapons.squirrel_burst import SquirrelBurst
 from pause_menu import PauseMenu
 from spatial_grid import SpatialGrid
 from Characters.minion import Minion
@@ -21,6 +26,8 @@ from projectile import Projectile
 from radius_weapon import RadiusWeapon
 from asset_manager import get_asset_path
 from title_screen import TitleScreen
+from ui import InventoryUI, PauseMenuInventoryUI
+from inventory import Item
 
 
 pygame.font.init()
@@ -141,6 +148,10 @@ def main():
         pause_menu = PauseMenu(WIDTH, HEIGHT)
         pause_menu.add_button(get_asset_path("Menu-Button.png"), "menu")
         pause_menu.add_button(get_asset_path("Exit-Button.png"), "exit")
+        
+        # Initialize UI
+        inventory_ui = InventoryUI(WIDTH, HEIGHT)
+        pause_inventory_ui = PauseMenuInventoryUI(WIDTH, HEIGHT)
 
         # Pre-generate all world objects for the entire world (fresh generation each game)
         world_objects = []
@@ -169,6 +180,43 @@ def main():
             pies.append(pie)
             world_objects.append(pie)
             spatial_grid.insert(pie)
+        
+        # Spawn sample items for pickup
+        item_drops = []
+        # Build item pool, excluding the player's starting weapon
+        all_items = [
+            NinjaStars(),
+            WizardConfetti(),
+            SquirrelBurst(),
+            Quicks(),
+        ]
+        
+        # Filter out the player's starting weapon from the pool
+        sample_items = []
+        if hasattr(player, 'starting_weapon_class') and player.starting_weapon_class:
+            starting_weapon_type = player.starting_weapon_class
+            for item in all_items:
+                if type(item) != starting_weapon_type:
+                    sample_items.append(item)
+        else:
+            sample_items = all_items
+        
+        ITEM_DROP_COUNT = 4
+        item_attempts = 0
+        while len(item_drops) < ITEM_DROP_COUNT and item_attempts < 200:
+            item_attempts += 1
+            x = random.randint(0, WORLD_W)
+            y = random.randint(0, WORLD_H)
+            pos = pygame.Vector2(x, y)
+            # Avoid spawning too close to center
+            if pos.distance_to(pygame.Vector2(WORLD_W / 2, WORLD_H / 2)) < max(WIDTH, HEIGHT) // 2:
+                continue
+            item = random.choice(sample_items)
+            item_drop = ItemDrop((x, y), item)
+            item_drops.append(item_drop)
+            world_objects.append(item_drop)
+            spatial_grid.insert(item_drop)
+        
         # Enemy list
         enemies = []
         wave_spawn_time = 0.0
@@ -272,8 +320,61 @@ def main():
                                         pies.remove(obj)
                                 except Exception:
                                     pass
+                        
+                        # Check for item drop pickups
+                        if isinstance(obj, ItemDrop) and not obj.picked:
+                            if obj.can_pickup(player.pos):
+                                # Check if weapon uniqueness constraint is met
+                                from Objects.Weapons.weapon import Weapon
+                                if isinstance(obj.item, Weapon):
+                                    # Check if player already has this weapon type
+                                    weapon_name = obj.item.name
+                                    already_has = any(w.name == weapon_name for w in player.inventory.weapons)
+                                    if already_has:
+                                        # Skip this weapon, don't pick up
+                                        continue
+                                
+                                # Try to add to inventory
+                                if player.inventory.add_item(obj.item):
+                                    inventory_ui.add_item_notification(obj.item)
+                                    obj.picked = True
+                                    
+                                    # Apply equipment/weapon effects immediately
+                                    if hasattr(obj.item, 'apply_effect'):
+                                        try:
+                                            obj.item.apply_effect(player)
+                                        except Exception:
+                                            pass
+                                    
+                                    # If this is a weapon, remove all duplicates from the ground
+                                    if isinstance(obj.item, Weapon):
+                                        weapon_name = obj.item.name
+                                        for drop in item_drops[:]:
+                                            if not drop.picked and isinstance(drop.item, Weapon):
+                                                if drop.item.name == weapon_name:
+                                                    drop.picked = True
+                                                    try:
+                                                        if drop in world_objects:
+                                                            world_objects.remove(drop)
+                                                    except Exception:
+                                                        pass
+                                    
+                                    # Remove from world
+                                    try:
+                                        if obj in world_objects:
+                                            world_objects.remove(obj)
+                                    except Exception:
+                                        pass
+                                    try:
+                                        if obj in item_drops:
+                                            item_drops.remove(obj)
+                                    except Exception:
+                                        pass
                 except Exception:
                     pass
+                
+                # Update inventory UI
+                inventory_ui.update(dt)
 
                 # Update projectiles and radius weapons
                 for p in projectiles[:]:  # Iterate over copy to allow removal
@@ -298,6 +399,11 @@ def main():
 
                 # Auto-fire player weapons
                 player.auto_fire(dt, enemies, projectiles)
+                
+                # Update item drops
+                for item_drop in item_drops:
+                    if not item_drop.picked:
+                        item_drop.update(dt)
 
                 # Update enemies
                 for e in enemies:
@@ -395,11 +501,21 @@ def main():
                         entity.draw(screen, camera)
                     elif entity_type == "projectile":
                         entity.draw(screen, camera)
+                
+                # Draw inventory UI (weapons and equipment at top)
+                inventory_ui.draw_inventory_bars(screen, player.inventory)
+                
+                # Draw recently added item notifications
+                inventory_ui.draw_notifications(screen)
 
                 pygame.display.flip()
             else:
                 # Paused: render paused menu (blurred snapshot + exit button)
                 pause_menu.render(screen)
+                
+                # Draw full inventory on pause screen
+                pause_inventory_ui.draw(screen, player.inventory, pause_menu_alpha=200)
+                
                 pygame.display.flip()
 
 

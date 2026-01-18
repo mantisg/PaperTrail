@@ -1,5 +1,6 @@
 from .player import Player
 from asset_manager import get_asset_path
+from Objects.Weapons.ninja_stars import NinjaStars
 
 
 class Ninjircle(Player):
@@ -13,6 +14,9 @@ class Ninjircle(Player):
         get_asset_path("Ninjircle-2.png"),
         get_asset_path("Ninjircle-2_1.png"),
     ]
+
+    # Starting weapon
+    starting_weapon_class = NinjaStars
 
     # Weapon: ninja stars (projectile type)
     weapon_type = "projectile"
@@ -28,4 +32,9 @@ class Ninjircle(Player):
 
     def __init__(self, pos, radius=40, speed=300):
         super().__init__(pos, radius, speed)
+        # Add starting weapon to inventory
+        if hasattr(self, 'starting_weapon_class') and self.starting_weapon_class:
+            starting_weapon = self.starting_weapon_class()
+            self.inventory.add_item(starting_weapon)
+            starting_weapon.apply_effect(self)
 
