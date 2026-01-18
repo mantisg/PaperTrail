@@ -21,6 +21,7 @@ from Objects.Weapons.squirrel_burst import SquirrelBurst
 from pause_menu import PauseMenu
 from spatial_grid import SpatialGrid
 from Characters.minion import Minion
+from Characters.mini_boss import MiniBoss
 from Characters.attack_robot import AttackRobot
 from projectile import Projectile
 from radius_weapon import RadiusWeapon
@@ -220,16 +221,19 @@ def main():
         # Enemy list
         enemies = []
         
-        # Wave system: list of (wave_time_seconds, wave_minion_count)
+        # Wave system: list of (wave_time_seconds, wave_minion_count, wave_miniboss_count)
         waves = [
-            (0.0, 30),      # Initial wave at 0:00 with 30 minions
-            (10.0, 50),     # Second wave at 0:10 with 50 minions
+            (0.0, 30, 0),      # Initial wave at 0:00 with 30 minions
+            (10.0, 50, 0),     # Second wave at 0:10 with 50 minions
+            (25.0, 50, 5),     # Third wave at 0:25 with 50 minions and 5 mini bosses
         ]
         wave_index = 0
         wave_spawn_time = 0.0
         wave_spawn_duration = 10.0  # Spawn each wave over 10 seconds
         wave_spawn_count = 0
+        wave_miniboss_count = 0
         enemies_spawned = 0
+        minibosses_spawned = 0
 
         def spawn_minion():
             """Spawn a single minion outside player's view."""
@@ -243,6 +247,21 @@ def main():
                 if pos.distance_to(pygame.Vector2(WORLD_W / 2, WORLD_H / 2)) > max(WIDTH, HEIGHT):
                     minion_type = random.choice(["multiply", "positive", "divisive"])
                     enemies.append(Minion((x, y), minion_type=minion_type))
+                    return True
+            return False
+
+        def spawn_miniboss():
+            """Spawn a single mini boss outside player's view."""
+            attempts = 0
+            while attempts < 50:
+                attempts += 1
+                x = random.randint(0, WORLD_W)
+                y = random.randint(0, WORLD_H)
+                pos = pygame.Vector2(x, y)
+                # Require spawn outside player's view (at least one screen away)
+                if pos.distance_to(pygame.Vector2(WORLD_W / 2, WORLD_H / 2)) > max(WIDTH, HEIGHT):
+                    miniboss_type = random.choice(["starficer", "attack_robot", "illuminawty"])
+                    enemies.append(MiniBoss((x, y), miniboss_type=miniboss_type))
                     return True
             return False
 
@@ -260,11 +279,6 @@ def main():
         running = True
         while running:
             dt = clock.tick(FPS) / 1000.0
-            
-            # Update game timer
-            game_timer += dt
-            if game_timer > MAX_GAME_TIME:
-                game_timer = MAX_GAME_TIME
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -309,22 +323,39 @@ def main():
                     running = False
 
             if not pause_menu.paused:
+                # Update game timer (only when not paused)
+                game_timer += dt
+                if game_timer > MAX_GAME_TIME:
+                    game_timer = MAX_GAME_TIME
+                
                 # Check if a new wave should start
                 if wave_index < len(waves):
-                    wave_start_time, wave_count = waves[wave_index]
+                    wave_data = waves[wave_index]
+                    wave_start_time = wave_data[0]
+                    wave_minion_count = wave_data[1]
+                    wave_miniboss_count = wave_data[2] if len(wave_data) > 2 else 0
+                    
                     if game_timer >= wave_start_time:
-                        # Wave has started, spawn minions
+                        # Wave has started, spawn minions and mini bosses
                         time_into_wave = game_timer - wave_start_time
                         if time_into_wave >= 0:
-                            target_spawned = int((time_into_wave / wave_spawn_duration) * wave_count)
-                            while enemies_spawned < target_spawned and enemies_spawned < wave_count:
+                            # Spawn minions
+                            target_minions_spawned = int((time_into_wave / wave_spawn_duration) * wave_minion_count)
+                            while enemies_spawned < target_minions_spawned and enemies_spawned < wave_minion_count:
                                 spawn_minion()
                                 enemies_spawned += 1
                             
+                            # Spawn mini bosses
+                            target_minibosses_spawned = int((time_into_wave / wave_spawn_duration) * wave_miniboss_count)
+                            while minibosses_spawned < target_minibosses_spawned and minibosses_spawned < wave_miniboss_count:
+                                spawn_miniboss()
+                                minibosses_spawned += 1
+                            
                             # Check if wave is complete
-                            if enemies_spawned >= wave_count and time_into_wave > wave_spawn_duration:
+                            if enemies_spawned >= wave_minion_count and minibosses_spawned >= wave_miniboss_count and time_into_wave > wave_spawn_duration:
                                 wave_index += 1
                                 enemies_spawned = 0
+                                minibosses_spawned = 0
                 
                 player.handle_input(dt, world_objects, spatial_grid)
                 camera.update(player.pos)
